@@ -53,9 +53,11 @@ class TFTP(DatagramProtocol):
         # information to interested backends without adding extra call
         # arguments, or switching to using a request object, for example.
         context = {}
+        interface = ''
         if self.transport is not None:
             # Add the local and remote addresses to the call context.
             local = self.transport.getHost()
+            interface = local.host
             context["local"] = local.host, local.port
             context["remote"] = addr
         try:
@@ -82,12 +84,12 @@ class TFTP(DatagramProtocol):
                     fs_interface = NetasciiReceiverProxy(fs_interface)
                 session = RemoteOriginWriteSession(addr, fs_interface,
                                                    datagram.options, _clock=self._clock)
-                reactor.listenUDP(0, session)
+                reactor.listenUDP(0, session, interface=interface)
                 returnValue(session)
             elif datagram.opcode == OP_RRQ:
                 if mode == 'netascii':
                     fs_interface = NetasciiSenderProxy(fs_interface)
                 session = RemoteOriginReadSession(addr, fs_interface,
                                                   datagram.options, _clock=self._clock)
-                reactor.listenUDP(0, session)
+                reactor.listenUDP(0, session, interface=interface)
                 returnValue(session)
